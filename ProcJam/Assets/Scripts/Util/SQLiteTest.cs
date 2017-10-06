@@ -38,9 +38,9 @@ public class SQLiteTest : MonoBehaviour {
 		sqlCon.OpenConnection();
 		sqlCon.BeginTransaction();
 
-		int result = sqlCon.ExecuteCommand(tableBuilder.Get());
+		int result = sqlCon.ExecuteCommand(tableBuilder.BuildCommand());
 		Debug.Log(result);
-		result = sqlCon.ExecuteCommand(insertBuilder.Get());
+		result = sqlCon.ExecuteCommand(insertBuilder.BuildCommand());
 		Debug.Log(result);
 
 		sqlCon.CommitTransaction();

@@ -181,7 +181,7 @@ public class SQLiteTableBuilder {
 		return this;
 	}
 
-	public string Get()
+	public string BuildCommand()
 	{
 		commandString += ");";
 		return commandString;
@@ -224,7 +224,15 @@ public class SQLiteInsertBuilder {
 	public SQLiteInsertBuilder Insert<T>(string columnName, T value) where T : struct	//Only allow value types
 	{
 		columnNames.Add(columnName);
-		values.Add(value.ToString());
+		if (value is bool)//Bools are represented as 1 or 0 in DB
+		{
+			bool b = value.ToString().Equals("True");
+			values.Add((b ? 1 : 0).ToString());
+		}
+		else
+		{
+			values.Add(value.ToString());
+		}
 		return this;
 	}
 
@@ -232,7 +240,7 @@ public class SQLiteInsertBuilder {
 	/// Compile the insert command
 	/// </summary>
 	/// <returns></returns>
-	public string Get()
+	public string BuildCommand()
 	{
 		string str = "INSERT INTO " + tableName + " (";
 		//Add column names

@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Tools\AssetManager\AAssetManager.cs" />
+    <Compile Include="Assets\Scripts\Tools\AssetManager\AssetManagerTester.cs" />
     <Compile Include="Assets\Scripts\Tools\AssetManager\PropAssetManager.cs" />
     <Compile Include="Assets\Scripts\Util\SQLiteConnection.cs" />
     <Compile Include="Assets\Scripts\Util\SQLiteTest.cs" />
