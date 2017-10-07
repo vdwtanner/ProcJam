@@ -10,7 +10,6 @@ public class AssetManagerWindow : EditorWindow {
 	private AssetManagerWindowHelper helper;
 	private GameObject currentObject;
 
-
 	/// <summary>
 	/// The current tab.
 	/// 0 - Props
@@ -37,6 +36,11 @@ public class AssetManagerWindow : EditorWindow {
 		window.Show();
 	}
 
+	void Awake()
+	{
+		ConditionalInit();
+	}
+
 	//Init something if null
 	void ConditionalInit()
 	{
@@ -49,6 +53,13 @@ public class AssetManagerWindow : EditorWindow {
 
 	void OnSelectionChange()
 	{
+		helper.FindAllPrefabsInDirectory(helper.currentPath, true);
+		Repaint();
+	}
+
+	void OnProjectChange()
+	{
+		helper.FindAllPrefabsInDirectory(helper.currentPath, true);
 		Repaint();
 	}
 
@@ -86,13 +97,12 @@ public class AssetManagerWindow : EditorWindow {
 		{
 			folder = EditorPrefs.GetString(PROP_FOLDER_KEY);
 			helper.FindAllPrefabsInDirectory(folder);
+
+			if (mode == 0)
+				DrawPropsTabAdd();
+			else
+				DrawPropsTabUpdate();
 		}
-
-
-		if (mode == 0)
-			DrawPropsTabAdd();
-		else
-			DrawPropsTabUpdate();
 
 		EditorGUILayout.Space();
 		DrawSetFolderButton(PROP_FOLDER_KEY);
@@ -111,14 +121,14 @@ public class AssetManagerWindow : EditorWindow {
 		{
 			HandleErrorCodes(errorCode);
 			//TODO ask if you want to stop editing this object
-			if(!currentObject)
+			if(currentObject == null)
 				return;
 			else
 				EditorGUILayout.HelpBox("Last valid selection shown below.", MessageType.Info);
 		}
 		PropAssetDesc desc = helper.CreateAssetDescription<PropAssetDesc>(currentObject);
 
-		
+		#region Draw Asset Desc
 		EditorGUILayout.BeginHorizontal();
 		{
 			EditorGUILayout.BeginVertical(GUILayout.Width(130));
@@ -143,6 +153,7 @@ public class AssetManagerWindow : EditorWindow {
 			EditorGUILayout.EndVertical();
 		}
 		EditorGUILayout.EndHorizontal();
+		#endregion
 
 		if (GUILayout.Button("Move into Asset Manager"))
 		{
@@ -154,8 +165,9 @@ public class AssetManagerWindow : EditorWindow {
 			else
 			{
 				currentObject = null;
+				Selection.activeGameObject = null;
 				string folder = EditorPrefs.GetString(PROP_FOLDER_KEY);
-				helper.FindAllPrefabsInDirectory(folder);
+				helper.FindAllPrefabsInDirectory(folder, true);
 			}
 		}
 	}

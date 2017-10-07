@@ -26,15 +26,21 @@ public class AssetManagerWindowHelper {
 	public AssetManagerWindowHelper()
 	{
 		currentPath = "";
+		
 	}
 
 	/// <summary>
 	/// Finds all prefabs in the specified directory and stores their locations for later use
 	/// </summary>
 	/// <param name="dir"></param>
-	public void FindAllPrefabsInDirectory(string dir)
+	public void FindAllPrefabsInDirectory(string dir, bool force=false)
 	{
-		if (currentPath != dir)
+		if (!System.Uri.IsWellFormedUriString(dir, System.UriKind.Absolute))
+		{
+			allPrefabs = new string[] { };
+			return;
+		}
+		if (force || currentPath != dir)
 		{
 			allPrefabs = Directory.GetFiles(dir, "*.prefab", SearchOption.AllDirectories);
 			currentPath = dir;
@@ -43,6 +49,10 @@ public class AssetManagerWindowHelper {
 
 	public int HowManyAssetsLeftToAdd()
 	{
+		if(allPrefabs == null)
+		{
+			FindAllPrefabsInDirectory(currentPath, true);
+		}
 		return allPrefabs.Length;
 	}
 
@@ -65,7 +75,8 @@ public class AssetManagerWindowHelper {
 			return MULTIPLE_SELECTIONS;
 		}
 		string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
-		if (!assetPath.Contains(currentPath.Substring(Application.dataPath.Length)))
+		Debug.Log(assetPath + " : " + currentPath.Substring(Application.dataPath.Length - 6));
+		if (!assetPath.Contains(currentPath.Substring(Application.dataPath.Length - 6)))
 		{
 			return SELECTION_IN_WRONG_FOLDER;
 		}
