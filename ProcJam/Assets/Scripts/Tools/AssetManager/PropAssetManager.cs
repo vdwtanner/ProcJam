@@ -21,6 +21,14 @@ public class PropAssetManager : AAssetManager {
 		}
 	}
 
+	public static void TerminateConnection()
+	{
+		if(s_Instance != null)
+		{
+			s_Instance.Shutdown();
+		}
+	}
+
 	protected override void ConstructTable(object state)
 	{
 		SQLiteTableBuilder tableBuilder = new SQLiteTableBuilder();
@@ -33,7 +41,7 @@ public class PropAssetManager : AAssetManager {
 			.AddColumn("emitsLight", SQLiteConnection.SQL_TYPE.TINYINT)
 			.AddColumn("lightColor", SQLiteConnection.SQL_TYPE.SMALLINT)
 			.AddColumn("theme", SQLiteConnection.SQL_TYPE.SMALLINT)
-			.AddColumn("path", SQLiteConnection.SQL_TYPE.VARCHAR, "NOT NULL", 100);
+			.AddColumn("path", SQLiteConnection.SQL_TYPE.VARCHAR, "UNIQUE NOT NULL", 100);
 
 		sqlCon.OpenConnection();
 		sqlCon.ExecuteCommand(tableBuilder.BuildCommand());
@@ -62,26 +70,27 @@ public class PropAssetManager : AAssetManager {
 
 	#region Asset Adders
 
-	public override IEnumerator AddAssetAsync(AAssetDesc desc)
+	public override void AddAssetAsync(AAssetDesc desc)
 	{
 		Debug.Assert(desc is PropAssetDesc, "Must be PropAssetDescription");
-		//Wait until connection is closed and the table is ready 
-		while (!tableReady || sqlCon.connectionOpened)
-		{
-			yield return null;
-		}
 		AssetThreadInfo threadInfo = new AssetThreadInfo(desc);
 		ThreadPool.QueueUserWorkItem(AddAsset, threadInfo);
+#if DEBUG_BUILD_VERBOSE
+		Debug.Log("Spun off AddAsset task thread for " + desc.name);
+#endif
 	}
 
-
-	public override void Shutdown()
-	{
-		throw new NotImplementedException();
-	}
 
 	protected override void AddAsset(object threadInfo)
 	{
+		Thread thread = Thread.CurrentThread;
+		Debug.Assert(thread.IsBackground, "DB threads must work in background");
+
+		//Wait until connection is closed and the table is ready 
+		while (!tableReady || sqlCon.connectionOpened)
+		{
+			Thread.Sleep(10);
+		}
 		Debug.Assert(threadInfo is AssetThreadInfo, "Thread info must be AssetThreadInfo!");
 		AssetThreadInfo info = threadInfo as AssetThreadInfo;
 		PropAssetDesc desc = info.desc as PropAssetDesc;

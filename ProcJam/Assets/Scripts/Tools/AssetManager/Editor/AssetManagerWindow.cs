@@ -102,7 +102,7 @@ public class AssetManagerWindow : EditorWindow {
 
 	void DrawPropsTabAdd()
 	{
-		//string folder = EditorPrefs.GetString(PROP_FOLDER_KEY);
+		//
 		EditorGUILayout.LabelField("Remaining Assets: " + helper.HowManyAssetsLeftToAdd(), EditorStyles.boldLabel);
 		EditorGUILayout.Space();
 
@@ -146,7 +146,17 @@ public class AssetManagerWindow : EditorWindow {
 
 		if (GUILayout.Button("Move into Asset Manager"))
 		{
-			helper.MoveAssetIntoAssetManager(PropAssetManager.Instance);
+			string result = helper.MoveAssetIntoAssetManager(PropAssetManager.Instance);
+			if (result.Length > 0)
+			{
+				EditorUtility.DisplayDialog("Error moving into Asset Manager", result, "Shit");
+			}
+			else
+			{
+				currentObject = null;
+				string folder = EditorPrefs.GetString(PROP_FOLDER_KEY);
+				helper.FindAllPrefabsInDirectory(folder);
+			}
 		}
 	}
 
@@ -171,6 +181,10 @@ public class AssetManagerWindow : EditorWindow {
 		{
 			EditorPrefs.DeleteKey(PROP_FOLDER_KEY);
 			EditorPrefs.DeleteKey(WEAPON_FOLDER_KEY);
+		}
+		if(GUILayout.Button("Shutdown DB Connections"))
+		{
+			PropAssetManager.TerminateConnection();
 		}
 	}
 	#endregion
@@ -237,7 +251,6 @@ public class AssetManagerWindow : EditorWindow {
 		previewImageRect.width = 128;
 		EditorGUI.DrawPreviewTexture(previewImageRect, AssetPreview.GetAssetPreview(objectToAdd));
 	}
-
 	#endregion
 
 }

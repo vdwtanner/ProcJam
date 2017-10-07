@@ -55,7 +55,8 @@ public class SQLiteConnection {
 	{
 		dbConnection.Dispose();
 		dbCommand.Dispose();
-		dbTransaction.Dispose();
+		if(dbTransaction!=null)
+			dbTransaction.Dispose();
 	}
 
 	public void OpenConnection()

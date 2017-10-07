@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using Swing.Editor;
 
 /// <summary>
 /// This class exists to take some work from the AssetManagerWindow script so that it looks cleaner
 /// </summary>
+[ExecuteInEditMode]
 public class AssetManagerWindowHelper {
 	public string currentPath { get; private set; }
 	public AAssetDesc currentDesc;
@@ -108,12 +110,16 @@ public class AssetManagerWindowHelper {
 	/// <returns>Empty string if everything is good, else an error message</returns>
 	public string MoveAssetIntoAssetManager(AAssetManager assetManager)
 	{
-		string newPath = Application.dataPath + "/Resources" + currentDesc.path.Substring(currentDesc.path.LastIndexOf('/'));
+		int assetsEnd = currentDesc.path.IndexOf('/') + 1;
+		string newPath = "Assets/Resources/" + currentDesc.path.Substring(assetsEnd);
 		string result = AssetDatabase.MoveAsset(currentDesc.path, newPath);
-		if (result == newPath)
+		if (result.Length == 0)
 		{
 			currentDesc.path = newPath;
+
 			assetManager.AddAssetAsync(currentDesc);
+			//currentDesc = null;
+			FindAllPrefabsInDirectory(currentPath);
 			return "";
 		}
 		return result;

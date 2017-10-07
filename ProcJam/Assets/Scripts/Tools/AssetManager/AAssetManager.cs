@@ -14,7 +14,7 @@ public abstract class AAssetManager {
 
 	#region AssetAdders
 
-	public abstract IEnumerator AddAssetAsync(AAssetDesc desc);
+	public abstract void AddAssetAsync(AAssetDesc desc);
 
 	protected abstract void AddAsset(object info);
 
@@ -64,7 +64,7 @@ public abstract class AAssetManager {
 	/// <summary>
 	/// Run the shutdown sequence. Will disconnect from the asset database
 	/// </summary>
-	public virtual void Shutdown()
+	protected virtual void Shutdown()
 	{
 		sqlCon.Shutdown();
 	}
