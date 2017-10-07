@@ -62,7 +62,7 @@ public class PropAssetManager : AAssetManager {
 
 	#region Asset Adders
 
-	public override IEnumerator AddAssetAsync(AAssetDesc desc, string path)
+	public override IEnumerator AddAssetAsync(AAssetDesc desc)
 	{
 		Debug.Assert(desc is PropAssetDesc, "Must be PropAssetDescription");
 		//Wait until connection is closed and the table is ready 
@@ -70,7 +70,7 @@ public class PropAssetManager : AAssetManager {
 		{
 			yield return null;
 		}
-		AssetThreadInfo threadInfo = new AssetThreadInfo(desc, path);
+		AssetThreadInfo threadInfo = new AssetThreadInfo(desc);
 		ThreadPool.QueueUserWorkItem(AddAsset, threadInfo);
 	}
 
@@ -94,7 +94,7 @@ public class PropAssetManager : AAssetManager {
 			.Insert("emitsLight", desc.emitsLight)
 			.Insert("lightColor", (int)desc.lightColor)
 			.Insert("theme", (int)desc.theme)
-			.Insert("path", info.path);
+			.Insert("path", desc.path);
 
 		sqlCon.OpenConnection();
 		sqlCon.BeginTransaction();
@@ -111,6 +111,7 @@ public class PropAssetManager : AAssetManager {
 
 [Serializable]
 public class PropAssetDesc : AAssetDesc {
+	
 	public enum PropType {
 		Prop,
 		Lever,
@@ -124,5 +125,4 @@ public class PropAssetDesc : AAssetDesc {
 	public bool emitsLight = false;
 	public AssetColor lightColor = AssetColor.Any;
 	public AssetTheme theme = AssetTheme.Generic;
-	public string name = "";
 }

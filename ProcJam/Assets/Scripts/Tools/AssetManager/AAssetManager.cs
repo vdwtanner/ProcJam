@@ -14,7 +14,7 @@ public abstract class AAssetManager {
 
 	#region AssetAdders
 
-	public abstract IEnumerator AddAssetAsync(AAssetDesc desc, string path);
+	public abstract IEnumerator AddAssetAsync(AAssetDesc desc);
 
 	protected abstract void AddAsset(object info);
 
@@ -119,16 +119,17 @@ public abstract class AAssetDesc {
 	public enum AssetTheme {
 		Generic = 1
 	}
+
+	public string path = "";
+	public string name = "";
 }
 
 public class AssetThreadInfo {
 	public AAssetDesc desc;
-	public string path;
 	public bool taskComplete = false;
 
-	public AssetThreadInfo(AAssetDesc desc, string path)
+	public AssetThreadInfo(AAssetDesc desc)
 	{
 		this.desc = desc;
-		this.path = path;
 	}
 }

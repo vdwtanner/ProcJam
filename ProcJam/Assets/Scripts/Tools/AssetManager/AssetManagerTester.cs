@@ -7,7 +7,7 @@ public class AssetManagerTester : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		StartCoroutine(PropAssetManager.Instance.AddAssetAsync(propDesc, "totesARealPath.asset"));
+		StartCoroutine(PropAssetManager.Instance.AddAssetAsync(propDesc));
 	}
 	
 	// Update is called once per frame

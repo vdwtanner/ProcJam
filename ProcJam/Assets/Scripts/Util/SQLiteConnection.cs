@@ -36,7 +36,7 @@ public class SQLiteConnection {
 	/// Create a connection to the specified database
 	/// </summary>
 	/// <param name="databasePath">the path to the database from your assets folder. Include the .db extension.</param>
-	/// <returns></returns>
+	/// <returns>test</returns>
 	public bool ConnectToDatabase(string databasePath)
 	{
 		if(dbConnection != null)
