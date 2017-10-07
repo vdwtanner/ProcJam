@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using Swing.Editor;
 
 /// <summary>
 /// This class exists to take some work from the AssetManagerWindow script so that it looks cleaner
