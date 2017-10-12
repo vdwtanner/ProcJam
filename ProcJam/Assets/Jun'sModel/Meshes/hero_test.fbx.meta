@@ -1,0 +1,181 @@
+fileFormatVersion: 2
+guid: b8dbe81a1a2b34a47bcc40832184b092
+timeCreated: 1507781068
+licenseType: Free
+ModelImporter:
+  serializedVersion: 21
+  fileIDToRecycleName:
+    100000: hero4real
+    100002: Hero_skeleton
+    100004: //RootNode
+    100006: l_ankle
+    100008: l_clavicle
+    100010: l_elbow
+    100012: l_fingerknuckle
+    100014: l_hand
+    100016: l_hip
+    100018: l_indexknuckle
+    100020: l_indexknuckle1
+    100022: l_indexknuckle2
+    100024: l_indexknuckle3
+    100026: l_knee
+    100028: l_shoulder
+    100030: l_thumb1
+    100032: l_thumb2
+    100034: l_thumbknuckle
+    100036: l_toe
+    100038: l_wrist
+    100040: l_wrist1
+    100042: l_wrist2
+    100044: l_wrist3
+    100046: pelvis
+    100048: r_ankle
+    100050: r_clavicle
+    100052: r_elbow
+    100054: r_fingerknuckle
+    100056: r_hand
+    100058: r_hip
+    100060: r_indexknuckle
+    100062: r_indexknuckle1
+    100064: r_indexknuckle2
+    100066: r_indexknuckle3
+    100068: r_knee
+    100070: r_shoulder
+    100072: r_thumb1
+    100074: r_thumb2
+    100076: r_thumbknuckle
+    100078: r_toe
+    100080: r_wrist
+    100082: r_wrist1
+    100084: r_wrist2
+    100086: r_wrist3
+    100088: spine
+    100090: spine_face
+    100092: spine_mid
+    100094: spine_neck
+    400000: hero4real
+    400002: Hero_skeleton
+    400004: //RootNode
+    400006: l_ankle
+    400008: l_clavicle
+    400010: l_elbow
+    400012: l_fingerknuckle
+    400014: l_hand
+    400016: l_hip
+    400018: l_indexknuckle
+    400020: l_indexknuckle1
+    400022: l_indexknuckle2
+    400024: l_indexknuckle3
+    400026: l_knee
+    400028: l_shoulder
+    400030: l_thumb1
+    400032: l_thumb2
+    400034: l_thumbknuckle
+    400036: l_toe
+    400038: l_wrist
+    400040: l_wrist1
+    400042: l_wrist2
+    400044: l_wrist3
+    400046: pelvis
+    400048: r_ankle
+    400050: r_clavicle
+    400052: r_elbow
+    400054: r_fingerknuckle
+    400056: r_hand
+    400058: r_hip
+    400060: r_indexknuckle
+    400062: r_indexknuckle1
+    400064: r_indexknuckle2
+    400066: r_indexknuckle3
+    400068: r_knee
+    400070: r_shoulder
+    400072: r_thumb1
+    400074: r_thumb2
+    400076: r_thumbknuckle
+    400078: r_toe
+    400080: r_wrist
+    400082: r_wrist1
+    400084: r_wrist2
+    400086: r_wrist3
+    400088: spine
+    400090: spine_face
+    400092: spine_mid
+    400094: spine_neck
+    4300000: hero4real
+    9500000: //RootNode
+    13700000: hero4real
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
