@@ -118,7 +118,7 @@ public class AssetManagerWindowHelper {
 	/// </summary>
 	/// <param name="assetManager"></param>
 	/// <returns>Empty string if everything is good, else an error message</returns>
-	public string MoveAssetIntoAssetManager(AAssetManager assetManager)
+	public string MoveAssetIntoAssetManager()
 	{
 		int assetsEnd = currentDesc.path.IndexOf('/') + 1;
 		string newPath = "Assets/Resources/" + currentDesc.path.Substring(assetsEnd);
@@ -127,7 +127,7 @@ public class AssetManagerWindowHelper {
 		{
 			currentDesc.path = newPath;
 
-			assetManager.AddAssetAsync(currentDesc);
+			AssetManager.Instance.AddAssetAsync(currentDesc);
 			//currentDesc = null;
 			FindAllPrefabsInDirectory(currentPath);
 			return "";

@@ -34,11 +34,13 @@ public class AssetManagerWindow : EditorWindow {
 		window.tab = 0;
 		window.minSize = new Vector2(370, 500);
 		window.Show();
+		window.titleContent.text = "Asset Manager";
 	}
 
 	void Awake()
 	{
 		ConditionalInit();
+		titleContent.text = "Asset Manager";
 	}
 
 	//Init something if null
@@ -157,7 +159,8 @@ public class AssetManagerWindow : EditorWindow {
 
 		if (GUILayout.Button("Move into Asset Manager"))
 		{
-			string result = helper.MoveAssetIntoAssetManager(PropAssetManager.Instance);
+			//TODO - Update to use the Generic Asset Manager
+			/*string result = helper.MoveAssetIntoAssetManager(PropAssetManager.Instance);
 			if (result.Length > 0)
 			{
 				EditorUtility.DisplayDialog("Error moving into Asset Manager", result, "Shit");
@@ -168,7 +171,7 @@ public class AssetManagerWindow : EditorWindow {
 				Selection.activeGameObject = null;
 				string folder = EditorPrefs.GetString(PROP_FOLDER_KEY);
 				helper.FindAllPrefabsInDirectory(folder, true);
-			}
+			}*/
 		}
 	}
 
@@ -196,7 +199,7 @@ public class AssetManagerWindow : EditorWindow {
 		}
 		if(GUILayout.Button("Shutdown DB Connections"))
 		{
-			PropAssetManager.TerminateConnection();
+			AssetManager.TerminateConnection();
 		}
 	}
 	#endregion

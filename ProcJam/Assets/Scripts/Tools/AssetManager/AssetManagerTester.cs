@@ -7,7 +7,7 @@ public class AssetManagerTester : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		PropAssetManager.Instance.AddAssetAsync(propDesc);
+		AssetManager.Instance.AddAssetAsync(propDesc);
 	}
 	
 	// Update is called once per frame
