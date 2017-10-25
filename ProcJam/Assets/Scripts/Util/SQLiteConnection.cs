@@ -134,6 +134,10 @@ public class SQLiteConnection {
 #endif
 		int result = dbCommand.ExecuteNonQuery();
 
+#if DEBUG_BUILD_VERBOSE
+		Debug.Log("Finished Executing command: " + command);
+#endif
+
 		if (!connectionOpened)
 		{
 			dbConnection.Close();
