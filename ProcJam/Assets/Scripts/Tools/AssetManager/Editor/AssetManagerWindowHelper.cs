@@ -75,7 +75,7 @@ public class AssetManagerWindowHelper {
 			return MULTIPLE_SELECTIONS;
 		}
 		string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
-		Debug.Log(assetPath + " : " + currentPath.Substring(Application.dataPath.Length - 6));
+		//Debug.Log(assetPath + " : " + currentPath.Substring(Application.dataPath.Length - 6));
 		if (!assetPath.Contains(currentPath.Substring(Application.dataPath.Length - 6)))
 		{
 			return SELECTION_IN_WRONG_FOLDER;
@@ -94,23 +94,23 @@ public class AssetManagerWindowHelper {
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="gameObject"></param>
-	/// <returns></returns>
-	public T CreateAssetDescription<T>(GameObject gameObject) where T : AAssetDesc
+	/// <param name="descriptorType">The type of descriptor we want to create</param>
+	/// <returns>An AAssetDescriptor that can be cast to the type specified by descriptor type</returns>
+	public AAssetDesc CreateAssetDescription(GameObject gameObject, System.Type descriptorType)
 	{
 		string assetPath = AssetDatabase.GetAssetPath(gameObject);
-		var type = typeof(T);
-		if (currentDesc != null && currentDesc.GetType() == type)
+		if (currentDesc != null && currentDesc.GetType() == descriptorType)
 		{
 			if (currentDesc.path == assetPath)
-				return currentDesc as T;
+				return currentDesc as AAssetDesc;
 		}
-		var ctors = type.GetConstructors();
+		var ctors = descriptorType.GetConstructors();
 		currentDesc = ctors[0].Invoke(new object[] { }) as AAssetDesc;
 		currentDesc.path = assetPath;
 		int start = assetPath.LastIndexOf('/') + 1;
 		int length = assetPath.LastIndexOf('.') - start;
 		currentDesc.name = assetPath.Substring(start, length);// ".../name.prefab" Want to only get "name"
-		return currentDesc as T;
+		return currentDesc as AAssetDesc;
 	}
 
 	/// <summary>

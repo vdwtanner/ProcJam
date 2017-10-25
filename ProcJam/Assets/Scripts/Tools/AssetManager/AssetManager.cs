@@ -43,23 +43,25 @@ public class AssetManager {
 	public void AddAssetAsync(AAssetDesc desc)
 	{
 		AssetThreadInfo threadInfo = new AssetThreadInfo(desc);
-		ThreadPool.QueueUserWorkItem(AddAsset, threadInfo);
+		ThreadPool.QueueUserWorkItem(AddAssetTask, threadInfo);
 #if DEBUG_BUILD_VERBOSE
 		Debug.Log("Spun off AddAsset task thread for " + desc.name);
 #endif
 	}
 
-	protected void AddAsset(object threadInfo)
+	protected void AddAssetTask(object threadInfo)
 	{
 		Thread thread = Thread.CurrentThread;
 		Debug.Assert(thread.IsBackground, "DB threads must work in background");
 
+		AssetThreadInfo info = threadInfo as AssetThreadInfo;
 		//Wait until connection is closed and the table is ready 
 		while (!tablesReady || sqlCon.connectionOpened)
 		{
+			//Debug.Log("Desc.Name = " + info.desc.name + " :: TablesReady = " + tablesReady + " :: sqlCon.Open = " + sqlCon.connectionOpened);
 			Thread.Sleep(10);
 		}
-		AssetThreadInfo info = threadInfo as AssetThreadInfo;
+		
 		string command = MakeInsertCmdFromDesc(info.desc);
 
 		sqlCon.OpenConnection();
@@ -107,6 +109,57 @@ public class AssetManager {
 	}
 	#endregion
 
+	#region Initialization
+
+	/// <summary>
+	/// Initial setup. Will start up a connection to the asset database
+	/// </summary>
+	public virtual void Initialize()
+	{
+		sqlCon = new SQLiteConnection();
+		sqlCon.ConnectToDatabase("AssetDatabase.db");
+		tablesReady = false;
+
+		//Construct tables for all assetDescriptions
+		ThreadPool.QueueUserWorkItem(ConstructTables);
+		Debug.Log("Started thread to create Tables");
+	}
+
+	/// <summary>
+	/// Asynchronous construction call to make sure that the tables exist
+	/// </summary>
+	/// <param name="state"></param>
+	protected void ConstructTables(object state)
+	{
+		Thread thread = Thread.CurrentThread;
+		Debug.Assert(thread.IsBackground, "DB threads must work in background");
+
+		var descriptions = typeof(AAssetDesc).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(AAssetDesc)));
+		sqlCon.OpenConnection();
+
+		foreach (Type descriptionType in descriptions)
+		{
+			//Instantiate a descriptor so that we can create a table from it.
+			var ctors = descriptionType.GetConstructors();
+			AAssetDesc desc = ctors[0].Invoke(new object[] { }) as AAssetDesc;
+
+			string command = MakeTableCmdFromDesc(desc);
+			
+			sqlCon.ExecuteCommand(command);
+		}
+		sqlCon.CloseConnection();
+		tablesReady = true;
+		Debug.Log("Finished Building Tables");
+	}
+#endregion
+
+	/// <summary>
+	/// Run the shutdown sequence. Will disconnect from the asset database
+	/// </summary>
+	protected virtual void Shutdown()
+	{
+		sqlCon.Shutdown();
+	}
 	#region Reflection
 	/// <summary>
 	/// Make a Create Table command from a IDbDesc (Database Descriptor).
@@ -123,7 +176,7 @@ public class AssetManager {
 		{
 			className = className.Substring(0, className.Length - 4);
 		}
-		string cmd = "CREATE TABLE " + className + "(";
+		string cmd = "CREATE TABLE  IF NOT EXISTS " + className + " (";
 		var fields = desc.GetType().GetFields();
 		bool firstIteration = true;
 		//Create column descriptions
@@ -217,6 +270,10 @@ public class AssetManager {
 			{
 				vals.Add("'" + field.GetValue(desc).ToString() + "'");
 			}
+			else if (field.FieldType.IsEnum)
+			{
+				vals.Add(((int)field.GetValue(desc)).ToString());
+			}
 			else
 			{
 				vals.Add(field.GetValue(desc).ToString());
@@ -260,57 +317,6 @@ public class AssetManager {
 	}
 	#endregion
 
-	#region Initialization
-
-	/// <summary>
-	/// Initial setup. Will start up a connection to the asset database
-	/// </summary>
-	public virtual void Initialize()
-	{
-		sqlCon = new SQLiteConnection();
-		sqlCon.ConnectToDatabase("AssetDatabase.db");
-		tablesReady = false;
-
-		//Construct tables for all assetDescriptions
-		ThreadPool.QueueUserWorkItem(ConstructTables);
-		Debug.Log("Started thread");
-	}
-
-	/// <summary>
-	/// Asynchronous construction call to make sure that the tables exist
-	/// </summary>
-	/// <param name="state"></param>
-	protected void ConstructTables(object state)
-	{
-		Thread thread = Thread.CurrentThread;
-		Debug.Assert(thread.IsBackground, "DB threads must work in background");
-
-		var descriptions = typeof(AAssetDesc).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(AAssetDesc)));
-		sqlCon.OpenConnection();
-		foreach (Type descriptionType in descriptions)
-		{
-			//Instantiate a descriptor so that we can create a table from it.
-			var ctors = descriptionType.GetConstructors();
-			AAssetDesc desc = ctors[0].Invoke(new object[] { }) as AAssetDesc;
-
-			string command = MakeTableCmdFromDesc(desc);
-			
-			sqlCon.ExecuteCommand(command);
-			
-		}
-		sqlCon.CloseConnection();
-		tablesReady = true;
-
-	}
-#endregion
-
-	/// <summary>
-	/// Run the shutdown sequence. Will disconnect from the asset database
-	/// </summary>
-	protected virtual void Shutdown()
-	{
-		sqlCon.Shutdown();
-	}
 }
 
 public class VarcharAttribute : Attribute {
@@ -353,7 +359,6 @@ public abstract class AAssetDesc : IAssetDesc {
 		/// 
 		/// </summary>
 		Huge = 16,
-		Any = Tiny | Small | Medium | Large | Huge
 	}
 	[System.Flags]
 	public enum AssetColor {
@@ -367,15 +372,12 @@ public abstract class AAssetDesc : IAssetDesc {
 		Blue = 128,
 		Purple = 256,
 		Brown = 512,
-		Warm = Red | Orange | Yellow | Green,
-		Cool = Green | Blue | Purple,
-		Any = White | Grey | Black | Warm | Cool | Brown
 	}
 	[System.Flags]
 	public enum AssetTheme {
 		Generic = 1
 	}
-
+	[HideInInspector]
 	public string path = "";
 	[Varchar(40)]
 	public string name = "";
@@ -402,9 +404,14 @@ public class PropAssetDesc : AAssetDesc {
 
 	public PropType propType = PropType.Prop;
 	public AssetSize size = AssetSize.Medium;
-	public AssetColor primaryColor = AssetColor.Any;
-	public AssetColor secondaryColor = AssetColor.Any;
+	public AssetColor primaryColor = AssetColor.White;
+	public AssetColor secondaryColor = 0;
 	public bool emitsLight = false;
-	public AssetColor lightColor = AssetColor.Any;
+	public AssetColor lightColor = 0;
 	public AssetTheme theme = AssetTheme.Generic;
+}
+
+[Serializable]
+public class WeaponAssetDesc : AAssetDesc {
+
 }
