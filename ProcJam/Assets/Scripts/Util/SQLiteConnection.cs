@@ -93,7 +93,7 @@ public class SQLiteConnection {
 
 	public string BuildQuery(string select, string from, string where = "")
 	{
-		string query = "SELECT `" + select + "` FROM `" + from + "` " + (where != "" ? ("WHERE " + where) : "");
+		string query = "SELECT " + select + " FROM `" + from + "` " + (where != "" ? ("WHERE " + where) : "");
 #if DEBUG_BUILD_VERBOSE
 		Debug.Log("Built Query: " + query);
 #endif

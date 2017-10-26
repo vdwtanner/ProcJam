@@ -128,9 +128,13 @@ public class AssetManagerWindow : EditorWindow {
 			helper.FindAllPrefabsInDirectory(folder);
 
 			if (mode == 0)
+			{
 				DrawAssetTabAdd();
+			}
 			else
+			{
 				DrawAssetTabUpdate();
+			}
 		}
 		
 
@@ -175,13 +179,18 @@ public class AssetManagerWindow : EditorWindow {
 					{
 						continue;
 					}
-					if (field.FieldType == typeof(int))
+					System.Type fieldType = field.FieldType;
+					if(fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+					{
+						fieldType = fieldType.GetGenericArguments()[0];
+					}
+					if (fieldType == typeof(int))
 					{
 						field.SetValue(desc, EditorGUILayout.IntField(field.Name, (int)field.GetValue(desc)));
 					}
-					else if (field.FieldType.IsEnum)
+					else if (fieldType.IsEnum)
 					{
-						if(field.FieldType.GetCustomAttributes(typeof(System.FlagsAttribute), true).Length > 0)
+						if(fieldType.GetCustomAttributes(typeof(System.FlagsAttribute), true).Length > 0)
 						{
 							field.SetValue(desc, EditorGUILayout.EnumMaskPopup(field.Name, field.GetValue(desc) as System.Enum));
 						}
@@ -190,15 +199,15 @@ public class AssetManagerWindow : EditorWindow {
 							field.SetValue(desc, EditorGUILayout.EnumPopup(field.Name, field.GetValue(desc) as System.Enum));
 						}
 					}
-					else if (field.FieldType == typeof(bool))
+					else if (fieldType == typeof(bool))
 					{
 						field.SetValue(desc, EditorGUILayout.Toggle(field.Name, (bool)field.GetValue(desc)));
 					}
-					else if (field.FieldType == typeof(float))
+					else if (fieldType == typeof(float))
 					{
 						field.SetValue(desc, EditorGUILayout.FloatField(field.Name, (float)field.GetValue(desc)));
 					}
-					else if (field.FieldType == typeof(string))
+					else if (fieldType == typeof(string))
 					{
 						object[] attributes = field.GetCustomAttributes(typeof(VarcharAttribute), true);
 						if (attributes.Length > 0 && false)		//This isn't working how I'd expected
@@ -257,6 +266,20 @@ public class AssetManagerWindow : EditorWindow {
 
 	void DrawAssetTabUpdate()
 	{
+		EditorGUILayout.LabelField("Managed Assets: " + helper.HowManyAssetsUnderManagent(helper.GetResourcePath()), EditorStyles.boldLabel);
+		EditorGUILayout.Space();
+
+		int errorCode = helper.GetSelectedManagedObject(ref currentObject);
+		if (errorCode != AssetManagerWindowHelper.NO_ERROR)
+		{
+			HandleErrorCodes(errorCode);
+			//TODO ask if you want to stop editing this object
+			if (currentObject == null)
+				return;
+			else
+				EditorGUILayout.HelpBox("Last valid selection shown below.", MessageType.Info);
+		}
+
 
 	}
 
@@ -376,6 +399,10 @@ public class AssetManagerWindow : EditorWindow {
 		if(GUILayout.Button("Re-init window"))
 		{
 			ConditionalInit(true);
+		}
+		if(GUILayout.Button("Reset helper"))
+		{
+			helper.Reset();
 		}
 	}
 	#endregion

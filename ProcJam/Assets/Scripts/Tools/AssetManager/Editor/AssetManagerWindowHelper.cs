@@ -10,8 +10,15 @@ using System.IO;
 [ExecuteInEditMode]
 public class AssetManagerWindowHelper {
 	public string currentPath { get; private set; }
+	
 	public AAssetDesc currentDesc;
 	string[] allPrefabs;
+
+	#region Variables for managed assets
+	string lastCheckedManagedAssetPath = "";
+	int numManagedAssets;
+	string currentlySelectedManagedAssetPath = "";
+	#endregion
 
 	#region ErrorCodes
 	public const int NO_ERROR = 0;
@@ -25,8 +32,16 @@ public class AssetManagerWindowHelper {
 
 	public AssetManagerWindowHelper()
 	{
+		Reset();
+	}
+
+	public void Reset()
+	{
 		currentPath = "";
-		
+		currentlySelectedManagedAssetPath = "";
+		lastCheckedManagedAssetPath = "";
+		allPrefabs = null;
+		currentDesc = null;
 	}
 
 	/// <summary>
@@ -56,6 +71,24 @@ public class AssetManagerWindowHelper {
 		return allPrefabs.Length;
 	}
 
+	public int HowManyAssetsUnderManagent(string dir)
+	{
+		if (lastCheckedManagedAssetPath != dir)
+		{
+			if (!System.Uri.IsWellFormedUriString(dir, System.UriKind.Absolute))
+			{
+				allPrefabs = new string[] { };
+			}
+			numManagedAssets = Directory.GetFiles(dir, "*.prefab", SearchOption.AllDirectories).Length;
+		}
+		return numManagedAssets;
+	}
+
+	public void ClearPrefabPathsCache()
+	{
+		allPrefabs = null;
+	}
+
 	/// <summary>
 	/// Returns 0 if a valid gameObject was Selected
 	/// Returns -1 if multiple objects were selected
@@ -80,6 +113,7 @@ public class AssetManagerWindowHelper {
 		{
 			return SELECTION_IN_WRONG_FOLDER;
 		}
+		
 		if(Directory.Exists(Application.dataPath + assetPath.Substring(6))) //"Assets" is 6 characters long and we don't want to repeat it
 		{
 			return SELECTED_FOLDER;
@@ -90,9 +124,55 @@ public class AssetManagerWindowHelper {
 	}
 
 	/// <summary>
+	/// Returns 0 if a valid gameObject was Selected
+	/// Returns -1 if multiple objects were selected
+	/// Returns 
+	/// </summary>
+	/// <param name="gameObject"></param>
+	/// <returns></returns>
+	public int GetSelectedManagedObject(ref GameObject gameObject)
+	{
+		string[] guids = Selection.assetGUIDs;
+		if (guids.Length == 0)
+		{
+			return NO_SELECTION;
+		}
+		if (guids.Length > 1)
+		{
+			return MULTIPLE_SELECTIONS;
+		}
+		string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+		//Debug.Log(assetPath + " : " + currentPath.Substring(Application.dataPath.Length - 6));
+		if (!assetPath.Contains(GetResourcePath().Substring(Application.dataPath.Length - 6)))
+		{
+			return SELECTION_IN_WRONG_FOLDER;
+		}
+
+		if (Directory.Exists(Application.dataPath + assetPath.Substring(6))) //"Assets" is 6 characters long and we don't want to repeat it
+		{
+			return SELECTED_FOLDER;
+		}
+		gameObject = Selection.activeGameObject;
+		if(currentlySelectedManagedAssetPath != assetPath)
+		{
+			currentlySelectedManagedAssetPath = assetPath;
+			currentDesc = null;
+			Swing.Editor.EditorCoroutine.start(FetchAssetDesc());
+		}
+
+		return NO_ERROR;
+	}
+
+	protected IEnumerator FetchAssetDesc()
+	{
+		Swing.Editor.EditorCoroutineWithData cd = new Swing.Editor.EditorCoroutineWithData(AssetManager.Instance.GetDescriptionFromPath<PropAssetDesc>(currentlySelectedManagedAssetPath));
+		yield return cd.coroutine;
+		currentDesc = cd.result as AAssetDesc;
+	}
+
+	/// <summary>
 	/// Create a description if needed
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
 	/// <param name="gameObject"></param>
 	/// <param name="descriptorType">The type of descriptor we want to create</param>
 	/// <returns>An AAssetDescriptor that can be cast to the type specified by descriptor type</returns>
@@ -111,6 +191,12 @@ public class AssetManagerWindowHelper {
 		int length = assetPath.LastIndexOf('.') - start;
 		currentDesc.name = assetPath.Substring(start, length);// ".../name.prefab" Want to only get "name"
 		return currentDesc as AAssetDesc;
+	}
+
+	public string GetResourcePath()
+	{
+		string appPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("Assets"));
+		return appPath+"Assets/Resources/" + currentPath.Substring(Application.dataPath.Length+1);
 	}
 
 	/// <summary>

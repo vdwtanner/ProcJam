@@ -42,19 +42,23 @@ public class AssetManager {
 
 	public void AddAssetAsync(AAssetDesc desc)
 	{
-		AssetThreadInfo threadInfo = new AssetThreadInfo(desc);
+		AssetThreadInfoDesc threadInfo = new AssetThreadInfoDesc(desc);
 		ThreadPool.QueueUserWorkItem(AddAssetTask, threadInfo);
 #if DEBUG_BUILD_VERBOSE
 		Debug.Log("Spun off AddAsset task thread for " + desc.name);
 #endif
 	}
 
+	/// <summary>
+	/// Add an asset to the assetManager Database
+	/// </summary>
+	/// <param name="threadInfo"></param>
 	protected void AddAssetTask(object threadInfo)
 	{
 		Thread thread = Thread.CurrentThread;
 		Debug.Assert(thread.IsBackground, "DB threads must work in background");
 
-		AssetThreadInfo info = threadInfo as AssetThreadInfo;
+		AssetThreadInfoDesc info = threadInfo as AssetThreadInfoDesc;
 		//Wait until connection is closed and the table is ready 
 		while (!tablesReady || sqlCon.connectionOpened)
 		{
@@ -106,6 +110,66 @@ public class AssetManager {
 	public IEnumerator GetAssetsAsync(AAssetDesc desc, int count, out List<GameObject> gameObjects)
 	{
 		throw new NotImplementedException();
+	}
+
+	/// <summary>
+	/// Be sure to call from within a CoroutinWithData
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="assetPath"></param>
+	/// <returns>the description</returns>
+	public IEnumerator GetDescriptionFromPath<T>(string assetPath) where T : AAssetDesc
+	{
+		string className = typeof(T).Name;
+		if (className.Substring(className.Length - 4) == "Desc")
+		{
+			className = className.Substring(0, className.Length - 4);
+		}
+		string query = sqlCon.BuildQuery("*", className, "path = '" + assetPath + "'");
+
+		Debug.Log("Select query: " + query);
+
+		ThreadInfoQueryString tiqs = new ThreadInfoQueryString(query);
+		ThreadPool.QueueUserWorkItem(GetSingleAssetTask, tiqs);
+
+#if DEBUG_BUILD_VERBOSE
+		Debug.Log("Spun off GetSingleAssetTask thread for " + assetPath);
+#endif
+
+		while (!tiqs.taskComplete)
+		{
+			yield return null;
+		}
+		yield return tiqs.desc;
+	}
+
+	protected void GetSingleAssetTask(object threadInfo)
+	{
+		Thread thread = Thread.CurrentThread;
+		Debug.Assert(thread.IsBackground, "DB threads must work in background");
+
+		if(threadInfo is ThreadInfoQueryString)
+		{
+			ThreadInfoQueryString info = threadInfo as ThreadInfoQueryString;
+
+			//Wait until connection is closed and the table is ready 
+			while (!tablesReady || sqlCon.connectionOpened)
+			{
+				//Debug.Log("Desc.Name = " + info.desc.name + " :: TablesReady = " + tablesReady + " :: sqlCon.Open = " + sqlCon.connectionOpened);
+				Thread.Sleep(10);
+			}
+
+			sqlCon.OpenConnection();
+			using (var reader = sqlCon.ExecuteQuery(info.query))
+			{
+				//We should only have one row
+				if (reader.Read())
+				{
+					Debug.Log("Num fields returned by query: " + reader.FieldCount);
+				}
+			}
+			sqlCon.CloseConnection();
+		}
 	}
 	#endregion
 
@@ -194,19 +258,28 @@ public class AssetManager {
 			{
 				cmd += ", ";
 			}
-			if (field.FieldType == typeof(int) || field.FieldType.IsEnum)
+
+			System.Type fieldType = field.FieldType;
+			bool nullable = false;
+			if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+			{
+				fieldType = fieldType.GetGenericArguments()[0];
+				nullable = true;
+			}
+
+			if (fieldType == typeof(int) || fieldType.IsEnum)
 			{
 				cmd += field.Name + " INTEGER";
 			}
-			else if (field.FieldType == typeof(bool))
+			else if (fieldType == typeof(bool))
 			{
 				cmd += field.Name + " TINYINT";
 			}
-			else if (field.FieldType == typeof(float))
+			else if (fieldType == typeof(float))
 			{
 				cmd += field.Name + " REAL";
 			}
-			else if (field.FieldType == typeof(string))
+			else if (fieldType == typeof(string))
 			{
 				object[] attributes = field.GetCustomAttributes(typeof(VarcharAttribute), true);
 				if (attributes.Length > 0)
@@ -218,6 +291,10 @@ public class AssetManager {
 				{
 					cmd += field.Name + " TEXT";
 				}
+			}
+			if (!nullable)
+			{
+				cmd += " NOT NULL";
 			}
 		}
 		cmd += ");";
@@ -255,6 +332,7 @@ public class AssetManager {
 				vals.Add("NULL");
 				continue;
 			}
+
 			if (field.FieldType == typeof(bool))
 			{
 				if ((bool)field.GetValue(desc))
@@ -315,9 +393,39 @@ public class AssetManager {
 		cmd += ");";
 		return cmd;
 	}
+
+
 	#endregion
 
 }
+
+#region ThreadInfo
+public class ThreadInfo {
+	public bool taskComplete = false;
+}
+
+public class AssetThreadInfoDesc : ThreadInfo {
+	public AAssetDesc desc;
+	
+
+	public AssetThreadInfoDesc(AAssetDesc desc)
+	{
+		this.desc = desc;
+	}
+}
+
+public class ThreadInfoQueryString : ThreadInfo {
+	public string query;
+	/// <summary>The description of the asset pointed to by this string</summary>
+	public AAssetDesc desc;
+
+	public ThreadInfoQueryString(string query)
+	{
+		this.query = query;
+	}
+}
+
+#endregion
 
 public class VarcharAttribute : Attribute {
 	public int length = 20;
@@ -383,15 +491,7 @@ public abstract class AAssetDesc : IAssetDesc {
 	public string name = "";
 }
 
-public class AssetThreadInfo {
-	public AAssetDesc desc;
-	public bool taskComplete = false;
 
-	public AssetThreadInfo(AAssetDesc desc)
-	{
-		this.desc = desc;
-	}
-}
 
 [Serializable]
 public class PropAssetDesc : AAssetDesc {
@@ -406,7 +506,7 @@ public class PropAssetDesc : AAssetDesc {
 	public AssetSize size = AssetSize.Medium;
 	public AssetColor primaryColor = AssetColor.White;
 	public AssetColor secondaryColor = 0;
-	public bool emitsLight = false;
+	public Nullable<bool> emitsLight = false;
 	public AssetColor lightColor = 0;
 	public AssetTheme theme = AssetTheme.Generic;
 }
